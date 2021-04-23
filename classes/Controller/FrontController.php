@@ -204,7 +204,7 @@ class FrontController extends BaseController
         $url = $request->getQueryParam('url') ?: $request->getQueryParam('v');
 
         if (isset($url) && !empty($url)) {
-            $this->video = $this->downloader->getVideo($url, $this->getFormat($request), $this->getPassword($request));
+            $this->video = $this->downloader->getVideo($url, null, $this->getPassword($request));
 
             if ($this->config->convert && $request->getQueryParam('audio')) {
                 // We skip the info page and get directly to the download.
