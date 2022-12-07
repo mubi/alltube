@@ -1,0 +1,62 @@
+---
+# Path to your youtube-dl binary
+youtubedl: vendor/ytdl-org/youtube-dl/youtube_dl/__main__.py
+
+# Path to your python binary
+python: /usr/bin/python
+
+# An array of parameters to pass to youtube-dl
+params:
+  - --no-warnings
+  - --ignore-errors
+
+# True to enable audio conversion
+convert: true
+
+# True to enable advanced conversion mode
+convertAdvanced: true
+
+# List of formats available in advanced conversion mode
+convertAdvancedFormats: [mp3]
+
+# Path to your ffmpeg binary
+ffmpeg: /usr/bin/ffmpeg
+
+# ffmpeg logging level.
+ffmpegVerbosity: error
+
+# Path to the directory that contains the phantomjs binary.
+phantomjsDir: /usr/bin/
+
+# True to disable URL rewriting
+uglyUrls: false
+
+# True to stream videos through server
+# Set to "ask" if you want to allow it but not enable by default.
+stream: true
+
+# True to enable remux mode (merge best audio and best video)
+remux: false
+
+# MP3 bitrate when converting (in kbit/s)
+audioBitrate: 128
+
+# App name
+appName: MUBI Downloader
+
+# Generic formats supported by youtube-dl
+genericFormats:
+  bestvideo+bestaudio/best: YoutubeDL Default
+  best/bestvideo: Best
+  bestvideo+bestaudio: Remux best video with best audio
+  worst/worstvideo: Worst
+  mp4+bestaudio: MP4 and Bestaudio
+
+# Enable debug mode.
+debug: true
+
+# True to enable audio conversion mode by default
+defaultAudio: false
+
+# False to disable convert seek functionality
+convertSeek: false

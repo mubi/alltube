@@ -44,7 +44,7 @@ class DownloadController extends BaseController
     {
         $url = $this->getVideoPageUrl($request);
 
-        $this->video = $this->downloader->getVideo($url, $this->getFormat($request), $this->getPassword($request));
+        $this->video = $this->downloader->getVideo($url, null, $this->getPassword($request));
 
         try {
             if ($this->config->convert && $request->getQueryParam('audio')) {
@@ -174,49 +174,6 @@ class DownloadController extends BaseController
      */
     private function getStream(Request $request, Response $response): Response
     {
-        if (isset($this->video->entries)) {
-            if ($this->config->convert && $request->getQueryParam('audio')) {
-                $stream = new ConvertedPlaylistArchiveStream($this->downloader, $this->video);
-            } else {
-                $stream = new PlaylistArchiveStream($this->downloader, $this->video);
-            }
-            $response = $response->withHeader('Content-Type', 'application/zip');
-            $response = $response->withHeader(
-                'Content-Disposition',
-                'attachment; filename="' . $this->video->title . '.zip"'
-            );
-
-            return $response->withBody($stream);
-        } elseif ($this->video->protocol == 'rtmp') {
-            $response = $response->withHeader('Content-Type', 'video/' . $this->video->ext);
-            $body = new Stream($this->downloader->getRtmpStream($this->video));
-        } elseif ($this->video->protocol == 'm3u8' || $this->video->protocol == 'm3u8_native') {
-            $response = $response->withHeader('Content-Type', 'video/' . $this->video->ext);
-            $body = new Stream($this->downloader->getM3uStream($this->video));
-        } else {
-            $headers = [];
-            $range = $request->getHeader('Range');
-
-            if (!empty($range)) {
-                $headers['Range'] = $range;
-            }
-            $stream = $this->downloader->getHttpResponse($this->video, $headers);
-
-            $response = $response->withHeader('Content-Type', $stream->getHeader('Content-Type'));
-            $response = $response->withHeader('Content-Length', $stream->getHeader('Content-Length'));
-            $response = $response->withHeader('Accept-Ranges', $stream->getHeader('Accept-Ranges'));
-            $response = $response->withHeader('Content-Range', $stream->getHeader('Content-Range'));
-            if ($stream->getStatusCode() == StatusCode::HTTP_PARTIAL_CONTENT) {
-                $response = $response->withStatus(StatusCode::HTTP_PARTIAL_CONTENT);
-            }
-
-            if (isset($this->video->downloader_options->http_chunk_size)) {
-                // Workaround for Youtube throttling the download speed.
-                $body = new YoutubeStream($this->downloader, $this->video);
-            } else {
-                $body = $stream->getBody();
-            }
-        }
         if ($request->isGet()) {
             $response = $response->withBody($body);
         }
@@ -266,26 +223,6 @@ class DownloadController extends BaseController
      */
     private function getDownloadResponse(Request $request, Response $response): Response
     {
-        try {
-            $videoUrls = $this->video->getUrl();
-        } catch (EmptyUrlException $e) {
-            /*
-            If this happens it is probably a playlist
-            so it will either be handled by getStream() or throw an exception anyway.
-             */
-            $videoUrls = [];
-        }
-        if (count($videoUrls) > 1) {
-            return $this->getRemuxStream($request, $response);
-        } elseif ($this->config->stream && (isset($this->video->entries) || $request->getQueryParam('stream'))) {
-            return $this->getStream($request, $response);
-        } else {
-            if (empty($videoUrls[0])) {
-                throw new EmptyUrlException("Can't find URL of video.");
-            }
-
-            return $response->withRedirect($videoUrls[0]);
-        }
     }
 
     /**
